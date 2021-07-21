@@ -70,7 +70,7 @@ def add_watermask(file, mark_text, density=None, transparency=30):
     return image
 
 
-def add_shade(file, transparency=20):
+def add_shade(file, transparency=30):
     if isinstance(file, Image.Image):
         image = file
 
@@ -84,19 +84,9 @@ def add_shade(file, transparency=20):
     shade_width, shade_height = shade.size
 
     scale_width, scale_height = image_width / shade_width, image_height / shade_height
-    scale = max(scale_width, scale_height)
-
-    if scale < 1:
-        shade = shade.resize(
-            (int(scale * shade_width), int(scale * shade_height)))
-        scale = 1
-    else:
-        scale = int(scale)
-        if scale_width > scale_height:
-            shade = shade.resize((image_width // scale, image_width // scale))
-        else:
-            shade = shade.resize(
-                (image_height // scale, image_height // scale))
+    scale = min(scale_width, scale_height)
+    shade = shade.resize(
+        (int(image_height * scale), int(image_height * scale)))
 
     shade = shade.convert('RGBA')
     shade_width, shade_height = shade.size
@@ -108,10 +98,7 @@ def add_shade(file, transparency=20):
                 shade.putpixel((i, j), color)
 
     r, g, b, a = shade.split()
-    for i in range(scale):
-        for j in range(scale):
-            shade_position = (shade_width * i, shade_height * j)
-            image.paste(shade, shade_position, a)
+    image.paste(shade, (0, 0), a)
 
     return image
 
@@ -181,7 +168,7 @@ def main():
                 if file.suffix in '.pdf':
                     tmp_dir = Path(tempfile.mkdtemp())
                     # os.system(f'EXPLORER {tmp_dir}')
-                    pdf_to_image(file, tmp_dir, zoom_x=5, zoom_y=5)
+                    pdf_to_image(file, tmp_dir, zoom_x=4, zoom_y=4)
                     for image in tmp_dir.iterdir():
                         new_image = add_watermask(image, mark_text)
 
