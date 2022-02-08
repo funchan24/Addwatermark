@@ -18,7 +18,7 @@ class Logger(object):
         self.maxBytes = maxBytes
         self.backupCount = backupCount
         self.formatter = logging.Formatter(
-            fmt='%(asctime)s %(levelname)s  %(message)s',
+            fmt='%(asctime)s %(levelname)s>>%(message)s',
             datefmt='%Y-%m-%d %H:%M:%S')
         self.filehandlers = {}
         self.steamhandler = None
@@ -34,8 +34,9 @@ class Logger(object):
                                               encoding='utf-8',
                                               maxBytes=self.maxBytes,
                                               backupCount=self.backupCount)
-            filehandler.setLevel(log_level)
+
             filehandler.setFormatter(self.formatter)
+            filehandler.setLevel(log_level)
             self.filehandlers[log_level] = filehandler
 
         if not self.steamhandler:
@@ -98,15 +99,3 @@ class Logger(object):
         logger.addHandler(self.steamhandler)
 
         logger.critical(message)
-
-
-if __name__ == '__main__':
-    log_dir = Path(__file__).parent.parent / 'log'
-    log_dir.mkdir(exist_ok=True, parents=True)
-    logger = Logger(log_dir)
-
-    logger.debug('debug info')
-    logger.info('info info')
-    logger.warning('warning info')
-    logger.error('error info')
-    logger.critical('critical info')

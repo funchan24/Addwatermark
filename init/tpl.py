@@ -6,8 +6,7 @@ dirs_str = '''#!/usr/bin/env/python3
 
 from pathlib import Path
 
-pwd = Path(__file__).resolve()
-root_dir = pwd.parent.parent
+root_dir = Path(__file__).resolve().parents[1]
 bin_dir = root_dir / 'bin'
 conf_dir = root_dir / 'conf'
 core_dir = root_dir / 'core'
@@ -19,11 +18,6 @@ log_dir = root_dir / 'log'
 output_dir = root_dir / 'output'
 res_dir = root_dir / 'res'
 tests_dir = root_dir / 'tests'
-
-dir_tuple = (bin_dir, conf_dir, core_dir, db_dir, docs_dir, init_dir,
-             input_dir, log_dir, output_dir, res_dir, tests_dir)
-for _dir in dir_tuple:
-    _dir.mkdir(exist_ok=True, parents=True)
 '''
 
 gitignore_str = '''# Pycache
@@ -158,142 +152,76 @@ output/'''
 launch_str = '''#!/usr/bin/env/python3
 # -*- coding:utf-8 -*-
 
-import locale
+# Author: funchan
+# CreateDate: 2021-10-28 21:18:12
+# Description: launcher
+
 import os
 import platform
-import time
+import sys
 from pathlib import Path
 from subprocess import PIPE, run
 
+root_dir = Path(__file__).resolve().parent
+core_dir = root_dir / 'core'
+sys.path.append(str(core_dir))
 
-def creat_py_venv():
+
+def get_venv_path():
     venv_dir = root_dir / '.venv'
 
-    flags = True
-    while True:
-        os_platform = platform.system()
-        if os_platform == 'Windows':
-            base_python_path = 'python'
-            venv_python_path = venv_dir / 'scripts' / 'python.exe'
-            venv_pip_path = venv_dir / 'scripts' / 'pip.exe'
+    os_platform = platform.system()
+    if os_platform == 'Windows':
+        python_str = 'python'
+        python_path = venv_dir / 'scripts' / 'python.exe'
+        pip_path = venv_dir / 'scripts' / 'pip.exe'
 
-        if os_platform == 'Linux':
-            base_python_path = 'python3'
-            venv_python_path = venv_dir / 'bin' / 'python3'
-            venv_pip_path = venv_dir / 'bin' / 'pip3'
-
-        if not all([venv_python_path.exists(), venv_pip_path.exists()]):
-            if flags:
-                run(f'{base_python_path} -m venv .venv',
-                    shell=True,
-                    stdout=PIPE,
-                    stderr=PIPE)
-                flags = False
-                print(f'create python venv')
-
-            else:
-                raise ValueError(f\'\'\'failed to create python venv
-
-the command maybe as follows:
-
-windows:
-cd {root_dir}
-python -m venv .venv
-
-linux:
-cd {root_dir}
-python3 -m venv .venv
-\'\'\')
-        else:
-            break
-
-    return venv_python_path, venv_pip_path
-
-
-def init(flags, *, module=None):
-    system_encoding = locale.getpreferredencoding()
-    venv_python_path, venv_pip_path = creat_py_venv()
-
-    if flags == 0:
-        cmd_list = (
-            f'{venv_pip_path} install -i https://mirrors.aliyun.com/pypi/simple/ pip -U',
-            f'{venv_pip_path} config set global.index-url https://mirrors.aliyun.com/pypi/simple/',
-            f'{venv_pip_path} config set global.trusted-host mirrors.aliyun.com',
-            f'{venv_pip_path} config set global.timeout 6000',
-            f'{venv_pip_path} install chardet')
-        for cmd in cmd_list:
-            run(cmd, shell=True, stdout=PIPE, stderr=PIPE)
-
-        from chardet import detect
-        requirements_file = root_dir / 'requirements.txt'
-        try:
-            with open(requirements_file, 'rb') as file:
-                content = file.read()
-                file_encoding = detect(content)['encoding']
-                requirements = content.decode(file_encoding, errors='ignore')
-        except:
-            requirements = None
-
-        if requirements:
-            p = run(f'{venv_pip_path} list',
-                    shell=True,
-                    stdout=PIPE,
-                    stderr=PIPE)
-            installed_packages = p.stdout.decode(system_encoding,
-                                                 errors='ignore')
-
-            for line in requirements.split('\\n'):
-                try:
-                    package, _ver = line.strip().split('==')
-                except ValueError:
-                    continue
-
-                if package not in installed_packages:
-                    run(f'{venv_pip_path} install {line}',
-                        shell=True,
-                        stdout=PIPE,
-                        stderr=PIPE)
-
-                    print(f'install package: {package}')
-                    time.sleep(1)
+    elif os_platform == 'Linux':
+        python_str = 'python3'
+        python_path = venv_dir / 'bin' / 'python3'
+        pip_path = venv_dir / 'bin' / 'pip3'
 
     else:
-        if not module:
-            raise ValueError('module name cannot be none')
+        raise EnvironmentError('unsupported platform!')
 
-        p = run(f'{venv_pip_path} install {module}',
-                shell=True,
-                stdout=PIPE,
-                stderr=PIPE)
+    return python_str, python_path, pip_path
 
-        if p.stderr:
-            raise NotImplementedError(
-                p.stderr.decode(system_encoding, errors='ignore'))
 
-        print(f'install package: {module}')
+def set_pip(pip_path):
+    cmd_list = [
+        f'{pip_path} config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple/',
+        f'{pip_path} config set global.trusted-host pypi.tuna.tsinghua.edu.cn',
+        f'{pip_path} config set global.timeout 6000',
+        f'{pip_path} install pip -U'
+    ]
 
-        run(f'{venv_pip_path} freeze >requirements.txt',
-            shell=True,
-            stdout=PIPE,
-            stderr=PIPE)
+    [run(i, shell=True, stdout=PIPE, stderr=PIPE) for i in cmd_list]
 
 
 if __name__ == '__main__':
-    pwd = Path(__file__).resolve()
-    root_dir = pwd.parent.parent
     os.chdir(root_dir)
+    _, venv_python_path, venv_pip_path = get_venv_path()
 
-    flags = 0
+    if Path(sys.executable) != venv_python_path:
+        cmd = f'{venv_python_path} {__file__}'
+        run(cmd, shell=True, stdout=PIPE)
+        sys.exit()
+
+    flag = 1
     while True:
         try:
             from main import main
             main()
             break
         except ModuleNotFoundError as e:
-            module = str(e).split("'")[-2]
-            init(flags, module=module)
-        finally:
-            flags += 1
+            if flag < 1:
+                print(e)
+                break
+
+            set_pip(venv_pip_path)
+            cmd = f'{venv_pip_path} install -r requirements.txt'
+            run(cmd, shell=True, stdout=PIPE)
+            flag -= 1
 '''
 
 log_str = '''#!/usr/bin/env/python3
@@ -316,7 +244,7 @@ class Logger(object):
         self.maxBytes = maxBytes
         self.backupCount = backupCount
         self.formatter = logging.Formatter(
-            fmt='%(asctime)s %(levelname)s\t%(message)s',
+            fmt='%(asctime)s %(levelname)s>>%(message)s',
             datefmt='%Y-%m-%d %H:%M:%S')
         self.filehandlers = {}
         self.steamhandler = None
@@ -332,8 +260,8 @@ class Logger(object):
                                               encoding='utf-8',
                                               maxBytes=self.maxBytes,
                                               backupCount=self.backupCount)
-            filehandler.setLevel(log_level)
             filehandler.setFormatter(self.formatter)
+            filehandler.setLevel(log_level)
             self.filehandlers[log_level] = filehandler
 
         if not self.steamhandler:
@@ -396,18 +324,6 @@ class Logger(object):
         logger.addHandler(self.steamhandler)
 
         logger.critical(message)
-
-
-if __name__ == '__main__':
-    log_dir = Path(__file__).parent.parent / 'log'
-    log_dir.mkdir(exist_ok=True, parents=True)
-    logger = Logger(log_dir)
-
-    logger.debug('debug info')
-    logger.info('info info')
-    logger.warning('warning info')
-    logger.error('error info')
-    logger.critical('critical info')
 '''
 
 main_str = '''#!/usr/bin/env/python3
@@ -517,40 +433,41 @@ readme_str = '''## $appname
 start_str_cmd = r'''@echo off
 
 cd /d %~dp0
-
-set url_1="https://cdn.npm.taobao.org/dist/python/3.7.4/python-3.7.4.exe"
-set url_2="https://www.python.org/ftp/python/3.7.4/python-3.7.4.exe"
-
-if "%PROCESSOR_ARCHITECTURE%"=="AMD64" (
-    set python_dir=%LocalAppData%\Programs\Python37-32
-) else (
-    set python_dir=%LocalAppData%\Programs\Python37
-)
-
-set temp_file=%Temp%\python-3.7.4.exe
+setlocal enabledelayedexpansion
 
 if not exist .venv\scripts\python.exe (
     python -m venv .venv 1>nul 2>nul
 
     if not exist .venv\scripts\python.exe (
-        certutil -urlcache -split -f %url_1% %temp_file% 1>nul 2>nul
+        echo Install Python...
+        set temp_file=!Temp!\python-3.7.6.exe
 
-        if %errorlevel% NEQ 0 (
-            certutil -urlcache -split -f %url_2% %temp_file% 1>nul 2>nul
+        set url="https://oss.npmmirror.com/dist/python/3.7.6/python-3.7.6.exe"
+        certutil -urlcache -split -f !url! !temp_file! 1>nul 2>nul
 
-            if %errorlevel% NEQ 0 (
-                echo Error: failed to download python, check the network!
+        if !errorlevel! NEQ 0 (
+            set url="https://www.python.org/ftp/python/3.7.6/python-3.7.6.exe"
+            certutil -urlcache -split -f !url! !temp_file! 1>nul 2>nul
+
+            if !errorlevel! NEQ 0 (
+                echo Error: Failed to download Python, Check the network!
                 pause >nul
                 exit
             )
         )
 
-        %temp_file% /passive /quiet TargetDir=%python_dir%
-        %python_dir%\python.exe -m venv .venv 1>nul 2>nul
+        if "!PROCESSOR_ARCHITECTURE!"=="AMD64" (
+            set python_dir=!LocalAppData!\Programs\Python37-32
+        ) else (
+            set python_dir=!LocalAppData!\Programs\Python37
+        )
+
+        !temp_file! /passive /quiet PrependPath=1 TargetDir=!python_dir!
+        !python_dir!\python.exe -m venv .venv 1>nul 2>nul
     )
 )
 
-.venv\scripts\python.exe core\launch.py'''
+.venv\scripts\python.exe launch.py'''
 
 start_str_dash = r'''stty -echo
 
@@ -559,8 +476,7 @@ cd `dirname $0`
 if [ ! -e ./.venv/bin/python3 ]; then
     python3 -m venv .venv
     if [ ! -e ./.venv/bin/python3 ]; then
-        echo install python3 and run this script again
+        echo Install Python3.x and run this script again.
     fi
 fi
-
-./.venv/bin/python3 ./core/launch.py'''
+./.venv/bin/python3 ./launch.py'''
