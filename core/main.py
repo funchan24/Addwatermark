@@ -5,6 +5,7 @@
 # CreateDate: 2021-07-15 13:20:02
 # Description: 为图片、PDF文件添加文字水印
 
+import locale
 import tempfile
 import time
 from datetime import datetime
@@ -16,6 +17,7 @@ from typing import Tuple, Union
 
 import fitz
 import qrcode
+import windnd
 from fpdf import FPDF
 from PIL import Image, ImageDraw, ImageFont, ImageTk
 from ttkbootstrap import *
@@ -268,6 +270,7 @@ class App(GUI):
 
         self.after(100, self.update_status)
         self.get_view()
+        windnd.hook_dropfiles(self, func=self.drop_files)
 
     def add_widget(self):
         menu = Menu(self)
@@ -449,6 +452,24 @@ class App(GUI):
         self.frame_1_widgets[0][0].delete(1.0, END)
         self.frame_1_widgets[0][0].insert(INSERT, filenames)
 
+    def drop_files(self, files):
+        if self.src_files is None:
+            self.src_files = []
+
+        encoding = locale.getpreferredencoding()
+        for file in files:
+            filename = file.decode(encoding, 'ignore')
+            if Path(filename).suffix in ('.pdf', '.bmp', '.gif', '.jpg',
+                                         '.png'):
+                if filename not in self.src_files:
+                    self.src_files.append(filename)
+
+        filenames = [f'* {i[:14]}...{i[-14:]}' for i in self.src_files]
+        filenames = '\n'.join(filenames)
+
+        self.frame_1_widgets[0][0].delete(1.0, END)
+        self.frame_1_widgets[0][0].insert(INSERT, filenames)
+
     def update_status(self):
         text = self.var_wm_text.get()[:20]
         opacity = int(self.frame_2_widgets[2][1].get())
@@ -501,7 +522,7 @@ class App(GUI):
 作者：funchan
 邮箱：funchan@msn.cn
 感谢：Python、fitz、fpdf2、Nuitka、
-Pillow、qrcode、ttkbootstrap'''
+Pillow、qrcode、ttkbootstrap、windnd'''
 
         self.toplevel_about.grid_anchor(CENTER)
         Label(self.toplevel_about, text=text,
@@ -537,7 +558,7 @@ Pillow、qrcode、ttkbootstrap'''
 
 def main():
     title = '水印助手'
-    version = 1.2
+    version = 1.3
     icon_path = str(res_dir / 'main_32.ico')
     resizable = (False, False)
     app = App(title=title,
