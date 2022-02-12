@@ -41,5 +41,6 @@ traits==6.3.2
 ttkbootstrap==1.5.1
 typing_extensions==4.0.1
 urllib3==1.26.8
+windnd==1.0.7
 yapf==0.32.0
 zipp==3.7.0

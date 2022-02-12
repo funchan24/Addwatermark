@@ -11,6 +11,7 @@ import time
 from datetime import datetime
 from math import ceil, sqrt
 from pathlib import Path
+from subprocess import PIPE, run
 from tkinter import *
 from tkinter.filedialog import askdirectory, askopenfilenames
 from typing import Tuple, Union
@@ -427,6 +428,8 @@ class App(GUI):
                 self.var_progress.set(int((i + 1) / len(self.src_files) * 100))
             i += 1
 
+        run(f'explorer {output}', shell=True, stdout=PIPE, stderr=PIPE)
+
         time.sleep(2)
         self.var_progress.set(0)
         self.enable_widgets()
@@ -558,7 +561,7 @@ Pillow、qrcode、ttkbootstrap、windnd'''
 
 def main():
     title = '水印助手'
-    version = 1.3
+    version = 1.4
     icon_path = str(res_dir / 'main_32.ico')
     resizable = (False, False)
     app = App(title=title,
