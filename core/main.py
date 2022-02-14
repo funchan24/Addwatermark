@@ -280,7 +280,7 @@ class App(GUI):
 
         frame_1 = Labelframe(self, text='选择文件', labelanchor=N)
         self.frame_1_widgets = [[
-            Text(frame_1, width=5 * self.base_size, height=3), '-'
+            Text(frame_1, width=6 * self.base_size, height=5), '-'
         ],
                                 [
                                     Button(frame_1,
@@ -295,8 +295,8 @@ class App(GUI):
                          self.base_size,
                          sticky=None)
 
-        self.scroll = Scrollbar(frame_1)
-        self.scroll.grid(row=0, column=1, sticky=E)
+        self.scroll = Scrollbar(frame_1, bootstyle=(PRIMARY, ROUND))
+        self.scroll.grid(row=0, column=2, sticky=NS)
         self.scroll.config(command=self.frame_1_widgets[0][0].yview)
         self.frame_1_widgets[0][0].config(yscrollcommand=self.scroll.set)
 
@@ -340,8 +340,8 @@ class App(GUI):
         self.frame_2_widgets[3][1].set(45)
         self.var_qrcode.set(False)
         self.grid_widget(self.frame_2_widgets, frame_2,
-                         (self.base_size, self.base_size // 2, self.base_size,
-                          self.base_size))
+                         (2 * self.base_size, self.base_size // 2,
+                          2 * self.base_size, self.base_size))
 
         self.var_progress = IntVar()
         self.var_progress.set(0)
@@ -561,7 +561,7 @@ Pillow、qrcode、ttkbootstrap、windnd'''
 
 def main():
     title = '水印助手'
-    version = 1.4
+    version = 1.5
     icon_path = str(res_dir / 'main_32.ico')
     resizable = (False, False)
     app = App(title=title,

@@ -52,12 +52,16 @@ class GUI(Window):
                          overrideredirect=overrideredirect,
                          alpha=alpha)
 
+        self.withdraw()
+
         self.base_size = base_size
         self.add_widget()
         self.center_horizontally(self)
         self.icon_path = icon_path
         if self.icon_path is not None:
             self.iconbitmap(self.icon_path)
+
+        self.deiconify()
 
         self.before_work()
 
@@ -132,7 +136,6 @@ class GUI(Window):
                         )
 
     def center_horizontally(self, window: Tuple[Window, Toplevel]) -> None:
-        window.withdraw()
         window.update()
         w_width = window.winfo_width()
         w_height = window.winfo_height()
@@ -141,7 +144,6 @@ class GUI(Window):
         xpos = (s_width - w_width) // 2
         ypos = int((s_height - w_height) * 0.382)
         window.geometry(f'+{xpos}+{ypos}')
-        window.deiconify()
 
     def before_work(self):
         pass

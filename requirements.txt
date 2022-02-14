@@ -14,6 +14,7 @@ httplib2==0.20.4
 idna==3.3
 importlib-metadata==4.10.1
 isodate==0.6.1
+libretranslatepy==2.1.1
 lxml==4.7.1
 networkx==2.6.3
 nibabel==3.2.1
@@ -38,6 +39,7 @@ scipy==1.7.3
 simplejson==3.17.6
 six==1.16.0
 traits==6.3.2
+translate==3.6.1
 ttkbootstrap==1.5.1
 typing_extensions==4.0.1
 urllib3==1.26.8
