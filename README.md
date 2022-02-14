@@ -15,4 +15,4 @@
 
 ### 截图
 
-<img width="447" alt="be6216c4232e253c9c4cc35957b71cb" src="https://user-images.githubusercontent.com/42088233/153010016-e3da17eb-eb63-44bd-a1ed-78702b717fe8.png">
+![1644831220(1)](https://user-images.githubusercontent.com/42088233/153837784-5aa79c6c-ee63-44da-a64d-e669bcd3f7ca.jpg)
